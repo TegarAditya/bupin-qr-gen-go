@@ -8,6 +8,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/image v0.25.0
 )
 
 require (
