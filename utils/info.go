@@ -9,9 +9,9 @@ import (
 )
 
 func GetInfoUJN(id string) (*model.InfoUJN, error) {
-	var infoUJN model.InfoUJN
+	var info model.InfoUJN
 
-	queryString := `
+	q := `
 		SELECT
 			qrujian.kodeQR,
 			qrujian.id_ujian AS idUjian,
@@ -33,18 +33,18 @@ func GetInfoUJN(id string) (*model.InfoUJN, error) {
 			qrujian.kodeQRUjian = ?
 	`
 
-	err := database.DB.Get(&infoUJN, queryString, id)
+	err := database.DB.Get(&info, q, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &infoUJN, nil
+	return &info, nil
 }
 
 func GetInfoVID(id string) (*model.InfoVID, error) {
-	var infoVID model.InfoVID
+	var info model.InfoVID
 
-	queryString := `
+	q := `
 		SELECT
 			qrvap.kodeQR,
 			jenjang.namaJenjang,
@@ -71,87 +71,88 @@ func GetInfoVID(id string) (*model.InfoVID, error) {
 			LEFT JOIN submateri ON submateri.idSubBab = subbab.idSubBab
 			LEFT JOIN videodmp ON subbab.idSubBab = videodmp.idSubBab
 		WHERE
-		qrvap.kodeQR = ?`
+		qrvap.kodeQR = ?
+	`
 
-	err := database.DB.Get(&infoVID, queryString, id)
+	err := database.DB.Get(&info, q, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &infoVID, nil
+	return &info, nil
 }
 
-func GetJenjangKelas(inputString string) string {
-	jenjangs := []string{"SD", "SMP", "SMA", "MI", "MTS", "SMK", "MA"}
-	jenjangsPattern := strings.Join(jenjangs, "|")
+func GetJenjangKelas(input string) string {
+	j := []string{"SD", "SMP", "SMA", "MI", "MTS", "SMK", "MA"}
+	p := strings.Join(j, "|")
 
-	regexPattern := fmt.Sprintf(`\b(%s)(?:-)?\s*(\d+|VII|VIII|IX|X|XI|XII)\b`, jenjangsPattern)
-	regex := regexp.MustCompile(`(?i)` + regexPattern)
+	rp := fmt.Sprintf(`\b(%s)(?:-)?\s*(\d+|VII|VIII|IX|X|XI|XII)\b`, p)
+	r := regexp.MustCompile(`(?i)` + rp)
 
-	match := regex.FindStringSubmatch(inputString)
+	m := r.FindStringSubmatch(input)
 
-	if match == nil {
-		return inputString
+	if m == nil {
+		return input
 	}
 
-	jenjang := match[1]
-	kelas := match[2]
+	jenjang := m[1]
+	kelas := m[2]
 
 	return fmt.Sprintf("%s %s", jenjang, kelas)
 }
 
-func GetKurikulum(inputString string) string {
-	stringLower := strings.ToLower(inputString)
+func GetKurikulum(input string) string {
+	s := strings.ToLower(input)
 
 	switch {
-	case strings.Contains(stringLower, "merdeka"):
+	case strings.Contains(s, "merdeka"):
 		return "KURMER"
-	case strings.Contains(stringLower, "kma 143"), strings.Contains(stringLower, "kma 183"), strings.Contains(stringLower, "kma 347"):
+	case strings.Contains(s, "kma 143"), strings.Contains(s, "kma 183"), strings.Contains(s, "kma 347"):
 		return "KMA 143"
-	case strings.Contains(stringLower, "btq"):
+	case strings.Contains(s, "btq"):
 		return "BTQ"
-	case strings.Contains(stringLower, "2013"):
+	case strings.Contains(s, "2013"):
 		return "K13"
 	default:
 		return "UNKNOWN"
 	}
 }
 
-func GetBab(inputString string) string {
-	regex := regexp.MustCompile(`\b(?:bab|chapter|subtema|wulangan|unit)\s+(\d+)`)
-	match := regex.FindStringSubmatch(strings.ToLower(inputString))
+func GetBab(input string) string {
+	r := regexp.MustCompile(`\b(?:bab|chapter|subtema|wulangan|unit)\s+(\d+)`)
+	m := r.FindStringSubmatch(strings.ToLower(input))
 
-	if match == nil {
-		return inputString
+	if m == nil {
+		return input
 	}
 
-	var typeStr string
-	if strings.Contains(strings.ToLower(inputString), "subtema") {
-		typeStr = "SUBTEMA"
+	var t string
+	if strings.Contains(strings.ToLower(input), "subtema") {
+		t = "SUBTEMA"
 	} else {
-		typeStr = "BAB"
+		t = "BAB"
 	}
 
-	return fmt.Sprintf("%s %s", typeStr, match[1])
+	return fmt.Sprintf("%s %s", t, m[1])
 }
 
-func GetSubBab(inputString string) string {
-	regex := regexp.MustCompile(`[A-Z]\.`)
+func GetSubBab(input string) string {
+	re := regexp.MustCompile(`[A-Z]\.`)
 
 	switch {
-	case strings.Contains(inputString, "AKM"):
+	case strings.Contains(input, "AKM"):
 		return "AKM"
-	case strings.Contains(inputString, "P3"):
+	case strings.Contains(input, "P3"):
 		return "P3"
 	}
 
-	match := regex.FindStringSubmatch(strings.ToUpper(inputString))
+	m := re.FindStringSubmatch(strings.ToUpper(input))
 
-	if match == nil {
-		return inputString
+	if m == nil {
+		return input
 	}
 
-	return fmt.Sprintf("SUBBAB %s", strings.Replace(match[0], ".", "", -1))
+	return fmt.Sprintf("SUBBAB %s", strings.Replace(m[0], ".", "", -1))
 }
 
 func GetFileName(v *model.InfoVID) string {
