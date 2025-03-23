@@ -4,4 +4,4 @@ This is a repository for the source code of Bupin QR Generator written in Golang
 
 >⚠️ **EXPERIMENTAL** ⚠️
 >
->This code is still in early development and isstrongly discouraged for use in productionenvironments as it may cause unpredictable results.
+>This code is still in early development and is strongly discouraged for use in productionenvironments as it may cause unpredictable results.
