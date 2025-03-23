@@ -6,9 +6,8 @@ require (
 	github.com/boombuler/barcode v1.0.2
 	github.com/go-sql-driver/mysql v1.9.0
 	github.com/gofiber/fiber/v2 v2.52.6
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/joho/godotenv v1.5.1
-	golang.org/x/image v0.25.0
 )
 
 require (
@@ -22,5 +21,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.59.0 // indirect
+	golang.org/x/image v0.25.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 )
