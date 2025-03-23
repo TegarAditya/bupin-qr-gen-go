@@ -17,7 +17,7 @@ type Config struct {
 func LoadConfig() Config {
 
 	dbPort, _ := strconv.Atoi(os.Getenv("DB_PORT"))
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	appPort, _ := strconv.Atoi(os.Getenv("PORT"))
 
 	return Config{
 		DBHost:     os.Getenv("DB_HOST"),
@@ -25,6 +25,6 @@ func LoadConfig() Config {
 		DBUser:     os.Getenv("DB_USER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
-		Port:       port,
+		Port:       appPort,
 	}
 }
