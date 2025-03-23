@@ -6,13 +6,13 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"os"
 	"sync"
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/basicfont"
-	"golang.org/x/image/math/fixed"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
 )
 
 var bufPool = sync.Pool{
@@ -21,25 +21,60 @@ var bufPool = sync.Pool{
 	},
 }
 
+var font *truetype.Font
+
+func init() {
+	var err error
+	font, err = loadFont("assets/Poppins-SemiBold.ttf")
+	if err != nil {
+		panic(err)
+	}
+}
+
 func clearRect(img *image.RGBA, backgroundColor color.Color, x, y, width, height int) {
 	rect := image.Rect(x, y, x+width, y+height)
 	draw.Draw(img, rect, &image.Uniform{backgroundColor}, image.Point{}, draw.Src)
 }
 
-func drawText(img *image.RGBA, text string, x, y int) {
-	col := color.RGBA{255, 255, 255, 255}
-	point := fixed.Point26_6{
-		X: fixed.Int26_6(x << 6),
-		Y: fixed.Int26_6(y << 6),
+func loadFont(path string) (*truetype.Font, error) {
+	fontBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return truetype.Parse(fontBytes)
+}
+
+func drawText(img *image.RGBA, textStr string, x, y int) {
+	const SIZE = 35
+	const STROKE_SIZE = 2
+
+	c := freetype.NewContext()
+	c.SetDPI(72)
+	c.SetFont(font)
+	c.SetFontSize(SIZE)
+	c.SetClip(img.Bounds())
+	c.SetDst(img)
+
+	c.SetSrc(image.NewUniform(color.White))
+	for dx := -STROKE_SIZE; dx <= STROKE_SIZE; dx++ {
+		for dy := -STROKE_SIZE; dy <= STROKE_SIZE; dy++ {
+			if dx*dx+dy*dy >= STROKE_SIZE*STROKE_SIZE {
+				continue
+			}
+			pt := freetype.Pt(x+dx, y+dy+int(c.PointToFixed(SIZE)>>6-6))
+			_, err := c.DrawString(textStr, pt)
+			if err != nil {
+				panic(err)
+			}
+		}
 	}
 
-	d := &font.Drawer{
-		Dst:  img,
-		Src:  image.NewUniform(col),
-		Face: basicfont.Face7x13,
-		Dot:  point,
+	c.SetSrc(image.NewUniform(color.Black))
+	pt := freetype.Pt(x, y+int(c.PointToFixed(SIZE)>>6-6))
+	_, err := c.DrawString(textStr, pt)
+	if err != nil {
+		panic(err)
 	}
-	d.DrawString(text)
 }
 
 func GenerateQRCode(data string) ([]byte, error) {
