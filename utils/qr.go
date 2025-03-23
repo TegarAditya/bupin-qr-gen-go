@@ -16,12 +16,12 @@ var bufPool = sync.Pool{
 }
 
 func GenerateQRCode(data string) ([]byte, error) {
-	qrCode, err := qr.Encode(data, qr.Q, qr.Auto)
+	qrcode, err := qr.Encode(data, qr.Q, qr.Auto)
 	if err != nil {
 		return nil, err
 	}
 
-	qrCode, err = barcode.Scale(qrCode, 512, 512)
+	qrcode, err = barcode.Scale(qrcode, 512, 512)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func GenerateQRCode(data string) ([]byte, error) {
 	buf.Reset()
 	defer bufPool.Put(buf)
 
-	err = png.Encode(buf, qrCode)
+	err = png.Encode(buf, qrcode)
 	if err != nil {
 		return nil, err
 	}
