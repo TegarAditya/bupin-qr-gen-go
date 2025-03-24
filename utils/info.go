@@ -13,12 +13,8 @@ func GetInfoUJN(id string) (*model.InfoUJN, error) {
 
 	q := `
 		SELECT
-			qrujian.kodeQR,
+			qrujian.kodeQRUjian,
 			qrujian.id_ujian AS idUjian,
-			qrujian.idJenjang,
-			qrujian.idKelas,
-			qrujian.idMapel,
-			qrujian.idBab,
 			jenjang.namaJenjang,
 			kelas.namaKelas,
 			bab.namaBab,
@@ -51,16 +47,7 @@ func GetInfoVID(id string) (*model.InfoVID, error) {
 			kelas.namaKelas,
 			mapel.namaMapel,
 			bab.namaBab,
-			subbab.namaSubBab,
-			qrvap.idKelas,
-			qrvap.idMapel,
-			qrvap.idBab,
-			qrvap.idSubBab,
-			submateri.linkVideo,
-			submateri.ytid,
-			videodmp.linkDmp,
-			videodmp.ytidDmp,
-			qrvap.tp
+			subbab.namaSubBab
 		FROM
 			qrvap
 			LEFT JOIN jenjang ON jenjang.idJenjang = qrvap.idJenjang
@@ -68,8 +55,6 @@ func GetInfoVID(id string) (*model.InfoVID, error) {
 			LEFT JOIN mapel ON mapel.idMapel = qrvap.idMapel
 			LEFT JOIN bab ON bab.idBab = qrvap.idBab
 			LEFT JOIN subbab ON subbab.idSubBab = qrvap.idSubBab
-			LEFT JOIN submateri ON submateri.idSubBab = subbab.idSubBab
-			LEFT JOIN videodmp ON subbab.idSubBab = videodmp.idSubBab
 		WHERE
 		qrvap.kodeQR = ?
 	`
@@ -155,20 +140,35 @@ func GetSubBab(input string) string {
 	return fmt.Sprintf("SUBBAB %s", strings.Replace(m[0], ".", "", -1))
 }
 
-func GetFileName(v *model.InfoVID) string {
+func GetFileName(v any) string {
 	var sb strings.Builder
 
-	sb.WriteString(GetJenjangKelas(v.NamaKelas))
-	sb.WriteString(" - ")
-	sb.WriteString(GetKurikulum(v.NamaKelas))
-	sb.WriteString(" - ")
-	sb.WriteString(v.NamaMapel)
-	sb.WriteString(" - ")
-	sb.WriteString(GetBab(v.NamaBab))
-	sb.WriteString(" - ")
-	sb.WriteString(GetSubBab(v.NamaSubBab))
-	sb.WriteString(" - ")
-	sb.WriteString(v.KodeQR)
+	switch v := v.(type) {
+	case *model.InfoVID:
+		sb.WriteString(GetJenjangKelas(v.NamaKelas))
+		sb.WriteString(" - ")
+		sb.WriteString(GetKurikulum(v.NamaKelas))
+		sb.WriteString(" - ")
+		sb.WriteString(v.NamaMapel)
+		sb.WriteString(" - ")
+		sb.WriteString(GetBab(v.NamaBab))
+		sb.WriteString(" - ")
+		sb.WriteString(GetSubBab(v.NamaSubBab))
+		sb.WriteString(" - ")
+		sb.WriteString(v.KodeQR)
+	case *model.InfoUJN:
+		sb.WriteString(GetJenjangKelas(v.NamaKelas))
+		sb.WriteString(" - ")
+		sb.WriteString(GetKurikulum(v.NamaKelas))
+		sb.WriteString(" - ")
+		sb.WriteString(v.NamaMapel)
+		sb.WriteString(" - ")
+		sb.WriteString(GetBab(v.NamaBab))
+		sb.WriteString(" - ")
+		sb.WriteString(v.KodeQR)
+	default:
+		return ""
+	}
 
 	return sb.String()
 }
