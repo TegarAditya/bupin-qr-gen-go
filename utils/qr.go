@@ -7,7 +7,6 @@ import (
 	"image/draw"
 	"image/png"
 	"os"
-	"sync"
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
@@ -15,13 +14,10 @@ import (
 	"github.com/golang/freetype/truetype"
 )
 
-var bufPool = sync.Pool{
-	New: func() any {
-		return new(bytes.Buffer)
-	},
-}
-
-var font *truetype.Font
+var (
+	font *truetype.Font
+	ctx  *freetype.Context
+)
 
 func init() {
 	var err error
@@ -29,11 +25,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-}
 
-func clearRect(img *image.RGBA, backgroundColor color.Color, x, y, width, height int) {
-	rect := image.Rect(x, y, x+width, y+height)
-	draw.Draw(img, rect, &image.Uniform{backgroundColor}, image.Point{}, draw.Src)
+	ctx = freetype.NewContext()
+	ctx.SetDPI(72)
+	ctx.SetFont(font)
+	ctx.SetFontSize(35)
 }
 
 func loadFont(path string) (*truetype.Font, error) {
@@ -45,42 +41,40 @@ func loadFont(path string) (*truetype.Font, error) {
 }
 
 func drawText(img *image.RGBA, textStr string, x, y int) {
-	const SIZE = 35
-	const STROKE_SIZE = 2
+	const (
+		SIZE        = 35
+		STROKE_SIZE = 2
+	)
 
-	c := freetype.NewContext()
-	c.SetDPI(72)
-	c.SetFont(font)
-	c.SetFontSize(SIZE)
-	c.SetClip(img.Bounds())
-	c.SetDst(img)
+	ctx.SetClip(img.Bounds())
+	ctx.SetDst(img)
 
-	c.SetSrc(image.NewUniform(color.White))
+	fixedSize := int(ctx.PointToFixed(SIZE) >> 6)
+	baseY := y + fixedSize - 6
+
+	// Draw stroke
+	ctx.SetSrc(image.NewUniform(color.White))
 	for dx := -STROKE_SIZE; dx <= STROKE_SIZE; dx++ {
 		for dy := -STROKE_SIZE; dy <= STROKE_SIZE; dy++ {
 			if dx*dx+dy*dy >= STROKE_SIZE*STROKE_SIZE {
 				continue
 			}
-			pt := freetype.Pt(x+dx, y+dy+int(c.PointToFixed(SIZE)>>6-6))
-			_, err := c.DrawString(textStr, pt)
-			if err != nil {
-				panic(err)
-			}
+			pt := freetype.Pt(x+dx, baseY+dy)
+			_, _ = ctx.DrawString(textStr, pt)
 		}
 	}
 
-	c.SetSrc(image.NewUniform(color.Black))
-	pt := freetype.Pt(x, y+int(c.PointToFixed(SIZE)>>6-6))
-	_, err := c.DrawString(textStr, pt)
-	if err != nil {
-		panic(err)
-	}
+	// Draw text
+	ctx.SetSrc(image.NewUniform(color.Black))
+	_, _ = ctx.DrawString(textStr, freetype.Pt(x, baseY))
 }
 
 func GenerateQRCode(data string) ([]byte, error) {
-	const MARK_WIDTH = 145
-	const MARK_HEIGHT = 39
-	const QR_SIZE = 512
+	const (
+		MARK_WIDTH  = 145
+		MARK_HEIGHT = 39
+		QR_SIZE     = 512
+	)
 
 	qrcode, err := qr.Encode(data, qr.Q, qr.Auto)
 	if err != nil {
@@ -95,16 +89,13 @@ func GenerateQRCode(data string) ([]byte, error) {
 	img := image.NewRGBA(qrcode.Bounds())
 	draw.Draw(img, img.Bounds(), qrcode, image.Point{}, draw.Src)
 
-	clearRect(img, color.Transparent, 351, 457, MARK_WIDTH, MARK_HEIGHT)
+	markRect := image.Rect(351, 457, 351+MARK_WIDTH, 457+MARK_HEIGHT)
+	draw.Draw(img, markRect, image.NewUniform(color.Transparent), image.Point{}, draw.Src)
 
 	drawText(img, "bupin.id", 351, 457)
 
-	buf := bufPool.Get().(*bytes.Buffer)
-	buf.Reset()
-	defer bufPool.Put(buf)
-
-	err = png.Encode(buf, img)
-	if err != nil {
+	buf := bytes.NewBuffer(nil)
+	if err := png.Encode(buf, img); err != nil {
 		return nil, err
 	}
 
