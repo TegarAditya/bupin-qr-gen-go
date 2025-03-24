@@ -16,15 +16,22 @@ type Config struct {
 
 func LoadConfig() Config {
 
-	dbPort, _ := strconv.Atoi(os.Getenv("DB_PORT"))
-	appPort, _ := strconv.Atoi(os.Getenv("PORT"))
+	dbPort, _ := strconv.Atoi(coalesce(os.Getenv("DB_PORT"), "5432"))
+	appPort, _ := strconv.Atoi(coalesce(os.Getenv("PORT"), "8080"))
 
 	return Config{
-		DBHost:     os.Getenv("DB_HOST"),
+		DBHost:     coalesce(os.Getenv("DB_HOST"), "localhost"),
 		DBPort:     dbPort,
-		DBUser:     os.Getenv("DB_USER"),
-		DBPassword: os.Getenv("DB_PASSWORD"),
-		DBName:     os.Getenv("DB_NAME"),
+		DBUser:     coalesce(os.Getenv("DB_USER"), "user"),
+		DBPassword: coalesce(os.Getenv("DB_PASSWORD"), "password"),
+		DBName:     coalesce(os.Getenv("DB_NAME"), "dbname"),
 		Port:       appPort,
 	}
+}
+
+func coalesce(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }
