@@ -14,6 +14,14 @@ import (
 	"github.com/golang/freetype/truetype"
 )
 
+const (
+	MARK_WIDTH  = 145
+	MARK_HEIGHT = 39
+	MARK_X      = 351
+	MARK_Y      = 457
+	QR_SIZE     = 512
+)
+
 var (
 	font *truetype.Font
 	ctx  *freetype.Context
@@ -69,13 +77,14 @@ func drawText(img *image.RGBA, textStr string, x, y int) {
 	_, _ = ctx.DrawString(textStr, freetype.Pt(x, baseY))
 }
 
-func GenerateQRCode(data string) ([]byte, error) {
-	const (
-		MARK_WIDTH  = 145
-		MARK_HEIGHT = 39
-		QR_SIZE     = 512
-	)
+func drawWatermark(img *image.RGBA) {
+	markRect := image.Rect(MARK_X, MARK_Y, MARK_X+MARK_WIDTH, MARK_Y+MARK_HEIGHT)
+	draw.Draw(img, markRect, image.NewUniform(color.Transparent), image.Point{}, draw.Src)
 
+	drawText(img, "bupin.id", MARK_X, MARK_Y)
+}
+
+func GenerateQRCode(data string, watermark bool) ([]byte, error) {
 	qrcode, err := qr.Encode(data, qr.Q, qr.Auto)
 	if err != nil {
 		return nil, err
@@ -89,10 +98,9 @@ func GenerateQRCode(data string) ([]byte, error) {
 	img := image.NewRGBA(qrcode.Bounds())
 	draw.Draw(img, img.Bounds(), qrcode, image.Point{}, draw.Src)
 
-	markRect := image.Rect(351, 457, 351+MARK_WIDTH, 457+MARK_HEIGHT)
-	draw.Draw(img, markRect, image.NewUniform(color.Transparent), image.Point{}, draw.Src)
-
-	drawText(img, "bupin.id", 351, 457)
+	if watermark {
+		drawWatermark(img)
+	}
 
 	buf := bytes.NewBuffer(nil)
 	if err := png.Encode(buf, img); err != nil {

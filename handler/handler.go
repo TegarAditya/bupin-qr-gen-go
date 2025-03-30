@@ -28,7 +28,7 @@ func GetQRCode(c *fiber.Ctx) error {
 	filename := utils.GetFileName(value)
 	url := "https://buku.bupin.id/?" + id
 
-	qrCode, err := utils.GenerateQRCode(url)
+	qrCode, err := utils.GenerateQRCode(url, true)
 	if err != nil {
 		return c.Status(500).SendString("Failed to generate QR code")
 	}
