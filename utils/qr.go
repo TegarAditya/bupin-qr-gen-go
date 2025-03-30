@@ -69,7 +69,19 @@ func drawText(img *image.RGBA, textStr string, x, y int) {
 	_, _ = ctx.DrawString(textStr, freetype.Pt(x, baseY))
 }
 
-func GenerateQRCode(data string) ([]byte, error) {
+func drawWatermark(img *image.RGBA) {
+	const (
+		MARK_WIDTH  = 145
+		MARK_HEIGHT = 39
+	)
+
+	markRect := image.Rect(351, 457, 351+MARK_WIDTH, 457+MARK_HEIGHT)
+	draw.Draw(img, markRect, image.NewUniform(color.Transparent), image.Point{}, draw.Src)
+
+	drawText(img, "bupin.id", 351, 457)
+}
+
+func GenerateQRCode(data string, watermark bool) ([]byte, error) {
 	const (
 		MARK_WIDTH  = 145
 		MARK_HEIGHT = 39
@@ -89,10 +101,9 @@ func GenerateQRCode(data string) ([]byte, error) {
 	img := image.NewRGBA(qrcode.Bounds())
 	draw.Draw(img, img.Bounds(), qrcode, image.Point{}, draw.Src)
 
-	markRect := image.Rect(351, 457, 351+MARK_WIDTH, 457+MARK_HEIGHT)
-	draw.Draw(img, markRect, image.NewUniform(color.Transparent), image.Point{}, draw.Src)
-
-	drawText(img, "bupin.id", 351, 457)
+	if watermark {
+		drawWatermark(img)
+	}
 
 	buf := bytes.NewBuffer(nil)
 	if err := png.Encode(buf, img); err != nil {
