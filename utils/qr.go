@@ -14,6 +14,12 @@ import (
 	"github.com/golang/freetype/truetype"
 )
 
+const (
+	MARK_WIDTH  = 145
+	MARK_HEIGHT = 39
+	QR_SIZE     = 512
+)
+
 var (
 	font *truetype.Font
 	ctx  *freetype.Context
@@ -70,11 +76,6 @@ func drawText(img *image.RGBA, textStr string, x, y int) {
 }
 
 func drawWatermark(img *image.RGBA) {
-	const (
-		MARK_WIDTH  = 145
-		MARK_HEIGHT = 39
-	)
-
 	markRect := image.Rect(351, 457, 351+MARK_WIDTH, 457+MARK_HEIGHT)
 	draw.Draw(img, markRect, image.NewUniform(color.Transparent), image.Point{}, draw.Src)
 
@@ -82,12 +83,6 @@ func drawWatermark(img *image.RGBA) {
 }
 
 func GenerateQRCode(data string, watermark bool) ([]byte, error) {
-	const (
-		MARK_WIDTH  = 145
-		MARK_HEIGHT = 39
-		QR_SIZE     = 512
-	)
-
 	qrcode, err := qr.Encode(data, qr.Q, qr.Auto)
 	if err != nil {
 		return nil, err
