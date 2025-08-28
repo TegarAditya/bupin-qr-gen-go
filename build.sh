@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Set output directory
 OUTPUT_DIR="./build/bin"
