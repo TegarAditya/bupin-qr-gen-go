@@ -34,6 +34,6 @@ func GetQRCode(c *fiber.Ctx) error {
 	}
 
 	c.Set("Content-Type", "image/png")
-	c.Set("Content-Disposition", "attachment; filename="+filename+".png")
+	c.Set("Content-Disposition", "inline; filename="+filename+".png")
 	return c.Send(qrCode)
 }
