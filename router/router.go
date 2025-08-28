@@ -8,5 +8,5 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
-	app.Get("/qrcode/:id", middleware.ValidateQRCodeRequest, handler.GetQRCode)
+	app.Get("/api/qr/:id", middleware.ValidateQRCodeRequest, handler.GetQRCode)
 }
